@@ -3,178 +3,302 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Why Mercury Is the Closest Planet (On Average)</title>
+<title>Mercury: The Closest Planet — Interactive Proof</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-  * { margin: 0; padding: 0; box-sizing: border-box; }
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --bg-deep: #060613;
+    --bg-panel: #0c0c20;
+    --bg-card: #12122a;
+    --bg-card-hover: #181840;
+    --border: #1e1e40;
+    --border-light: #2a2a55;
+    --text: #e0e0f0;
+    --text-dim: #7a7a9e;
+    --text-muted: #555578;
+    --accent: #6c7bff;
+    --accent-glow: rgba(108, 123, 255, 0.15);
+    --gold: #ffd666;
+    --gold-bg: rgba(255, 214, 102, 0.12);
+  }
 
   body {
-    background: #0a0a1a;
-    color: #e0e0e0;
-    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    background: var(--bg-deep);
+    color: var(--text);
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
     overflow: hidden;
     height: 100vh;
     display: flex;
   }
 
-  /* ── Left panel: simulation ── */
+  /* ── Left: Simulation Canvas ── */
   #sim-panel {
     flex: 1;
     position: relative;
     min-width: 0;
+    background: radial-gradient(ellipse at 50% 50%, #0f0f28 0%, #060613 70%);
   }
 
-  canvas {
-    display: block;
-    width: 100%;
-    height: 100%;
+  canvas { display: block; width: 100%; height: 100%; }
+
+  /* Canvas overlay badge */
+  #canvas-badge {
+    position: absolute;
+    top: 16px;
+    left: 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    pointer-events: none;
   }
 
-  /* ── Right panel: data ── */
+  #canvas-badge .badge-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .badge-pill {
+    background: rgba(12, 12, 32, 0.8);
+    backdrop-filter: blur(12px);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 5px 14px;
+    font-size: 0.72rem;
+    font-weight: 500;
+    color: var(--text-dim);
+    letter-spacing: 0.3px;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .badge-pill .val { color: var(--text); font-weight: 600; }
+
+  /* Closest-now indicator */
+  #closest-now {
+    position: absolute;
+    bottom: 18px;
+    left: 18px;
+    background: rgba(12, 12, 32, 0.85);
+    backdrop-filter: blur(12px);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 10px 16px;
+    pointer-events: none;
+    font-size: 0.78rem;
+    color: var(--text-dim);
+    transition: opacity 0.3s;
+  }
+
+  #closest-now .closest-planet {
+    font-weight: 700;
+    font-size: 0.95rem;
+    margin-top: 2px;
+  }
+
+  /* Copyright on canvas */
+  #copyright-overlay {
+    position: absolute;
+    bottom: 14px;
+    right: 16px;
+    font-size: 0.62rem;
+    color: rgba(255,255,255,0.18);
+    font-weight: 400;
+    letter-spacing: 0.5px;
+    pointer-events: none;
+  }
+
+  /* ── Right: Data Panel ── */
   #data-panel {
-    width: 370px;
-    background: #111125;
-    border-left: 1px solid #2a2a4a;
+    width: 380px;
+    background: var(--bg-panel);
+    border-left: 1px solid var(--border);
     display: flex;
     flex-direction: column;
     overflow-y: auto;
-    padding: 18px 16px;
-    gap: 14px;
+    overflow-x: hidden;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) transparent;
   }
 
-  h1 {
-    font-size: 1.15rem;
-    color: #aab4ff;
-    line-height: 1.35;
+  #data-panel::-webkit-scrollbar { width: 5px; }
+  #data-panel::-webkit-scrollbar-track { background: transparent; }
+  #data-panel::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+  /* Header */
+  .panel-header {
+    padding: 24px 20px 18px;
+    border-bottom: 1px solid var(--border);
+    background: linear-gradient(180deg, rgba(108,123,255,0.06) 0%, transparent 100%);
   }
 
-  .subtitle {
-    font-size: 0.82rem;
-    color: #8888aa;
-    line-height: 1.5;
+  .panel-header h1 {
+    font-family: 'Space Grotesk', 'Inter', sans-serif;
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #fff;
+    line-height: 1.3;
+    letter-spacing: -0.3px;
   }
+
+  .panel-header h1 .accent { color: var(--accent); }
+
+  .panel-header .tagline {
+    font-size: 0.78rem;
+    color: var(--text-dim);
+    line-height: 1.6;
+    margin-top: 8px;
+  }
+
+  /* Panel sections */
+  .panel-section {
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .section-title {
+    font-family: 'Space Grotesk', 'Inter', sans-serif;
+    font-size: 0.68rem;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: var(--text-muted);
+    font-weight: 600;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .section-title .icon { font-size: 0.85rem; }
 
   /* Controls */
+  .ctrl-group {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
   .ctrl-row {
     display: flex;
     align-items: center;
     gap: 10px;
-    flex-wrap: wrap;
   }
 
   .ctrl-row label {
+    font-size: 0.75rem;
+    color: var(--text-dim);
+    min-width: 72px;
+    font-weight: 500;
+  }
+
+  select {
+    background: var(--bg-card);
+    border: 1px solid var(--border-light);
+    color: var(--text);
+    padding: 6px 10px;
+    border-radius: 8px;
     font-size: 0.78rem;
-    color: #9999bb;
-    min-width: 80px;
-  }
-
-  button {
-    background: #22224a;
-    border: 1px solid #3a3a6a;
-    color: #c0c0e0;
-    padding: 5px 14px;
-    border-radius: 6px;
+    font-family: inherit;
     cursor: pointer;
-    font-size: 0.8rem;
-    transition: background 0.15s;
+    outline: none;
+    transition: border-color 0.2s;
   }
-  button:hover { background: #33336a; }
-  button.active { background: #4444aa; border-color: #6666cc; color: #fff; }
-
-  select, input[type=range] {
-    background: #1a1a3a;
-    border: 1px solid #3a3a6a;
-    color: #c0c0e0;
-    padding: 4px 8px;
-    border-radius: 5px;
-    font-size: 0.8rem;
-  }
+  select:focus { border-color: var(--accent); }
 
   input[type=range] {
     flex: 1;
-    accent-color: #6666cc;
-    min-width: 100px;
+    -webkit-appearance: none;
+    appearance: none;
+    height: 4px;
+    background: var(--border);
+    border-radius: 2px;
+    outline: none;
+    min-width: 90px;
   }
 
-  /* Average-distance table */
-  .avg-table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 0.82rem;
-  }
-
-  .avg-table th {
-    text-align: left;
-    padding: 6px 8px;
-    color: #8888bb;
-    font-weight: 600;
-    border-bottom: 1px solid #2a2a4a;
-    font-size: 0.72rem;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-  }
-
-  .avg-table td {
-    padding: 5px 8px;
-    border-bottom: 1px solid #1a1a3a;
-  }
-
-  .avg-table tr.highlight td {
-    background: rgba(80, 80, 200, 0.15);
-    font-weight: 600;
-  }
-
-  .avg-table .planet-dot {
-    display: inline-block;
-    width: 10px; height: 10px;
+  input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 16px; height: 16px;
     border-radius: 50%;
-    margin-right: 6px;
-    vertical-align: middle;
+    background: var(--accent);
+    cursor: pointer;
+    box-shadow: 0 0 8px rgba(108,123,255,0.4);
+    transition: transform 0.15s;
   }
 
-  .avg-table .bar-cell {
-    position: relative;
-    width: 110px;
+  input[type=range]::-webkit-slider-thumb:hover {
+    transform: scale(1.15);
   }
 
-  .avg-table .bar-bg {
-    position: absolute; left: 0; top: 50%; transform: translateY(-50%);
-    height: 14px; border-radius: 3px; opacity: 0.35;
-    transition: width 0.4s ease;
-  }
-
-  .avg-table .bar-val {
-    position: relative;
-    z-index: 1;
+  .slider-val {
+    font-size: 0.72rem;
+    color: var(--text-dim);
+    min-width: 32px;
+    text-align: right;
     font-variant-numeric: tabular-nums;
-  }
-
-  .rank-badge {
-    display: inline-block;
-    font-size: 0.68rem;
-    padding: 1px 6px;
-    border-radius: 10px;
-    background: #2a2a5a;
-    color: #aab;
     font-weight: 600;
-    min-width: 20px;
-    text-align: center;
   }
 
-  .rank-badge.gold { background: #8b7320; color: #ffe680; }
+  /* Buttons */
+  .btn-group {
+    display: flex;
+    gap: 8px;
+  }
 
-  /* Info box */
-  .info-box {
-    background: #161630;
-    border: 1px solid #2a2a4a;
+  button {
+    background: var(--bg-card);
+    border: 1px solid var(--border-light);
+    color: var(--text);
+    padding: 7px 16px;
     border-radius: 8px;
-    padding: 12px 14px;
+    cursor: pointer;
     font-size: 0.78rem;
-    line-height: 1.55;
-    color: #9999bb;
+    font-family: inherit;
+    font-weight: 500;
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    gap: 5px;
   }
-  .info-box strong { color: #c0c0f0; }
 
-  /* Stats row */
+  button:hover { background: var(--bg-card-hover); border-color: var(--accent); }
+  button.active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
+    box-shadow: 0 0 16px rgba(108,123,255,0.3);
+  }
+
+  /* Toggle */
+  .toggle-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 14px;
+  }
+
+  .toggle-label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.75rem;
+    color: var(--text-dim);
+    cursor: pointer;
+    user-select: none;
+    transition: color 0.15s;
+  }
+
+  .toggle-label:hover { color: var(--text); }
+
+  .toggle-label input[type=checkbox] {
+    width: 14px; height: 14px;
+    accent-color: var(--accent);
+    cursor: pointer;
+  }
+
+  /* Stats */
   .stats-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -182,233 +306,398 @@
   }
 
   .stat-card {
-    background: #161630;
-    border: 1px solid #2a2a4a;
-    border-radius: 8px;
-    padding: 10px 12px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 14px;
     text-align: center;
+    transition: border-color 0.2s;
   }
 
+  .stat-card:hover { border-color: var(--border-light); }
+
   .stat-card .stat-val {
-    font-size: 1.15rem;
+    font-family: 'Space Grotesk', 'Inter', sans-serif;
+    font-size: 1.3rem;
     font-weight: 700;
-    color: #aab4ff;
+    color: var(--accent);
     font-variant-numeric: tabular-nums;
   }
 
   .stat-card .stat-label {
-    font-size: 0.68rem;
-    color: #7777aa;
-    margin-top: 2px;
-  }
-
-  hr {
-    border: none;
-    border-top: 1px solid #222244;
-  }
-
-  /* Section headers */
-  .section-hdr {
-    font-size: 0.75rem;
+    font-size: 0.65rem;
+    color: var(--text-muted);
+    margin-top: 3px;
     text-transform: uppercase;
-    letter-spacing: 1px;
-    color: #6666aa;
-    font-weight: 700;
+    letter-spacing: 0.5px;
+    font-weight: 500;
   }
 
-  /* Current distances */
+  /* Current distance bars */
   #current-dist {
-    font-size: 0.78rem;
-    line-height: 1.7;
-  }
-
-  #current-dist .cd-row {
     display: flex;
-    align-items: center;
+    flex-direction: column;
     gap: 6px;
   }
 
-  #current-dist .cd-bar {
-    flex: 1;
-    height: 6px;
-    background: #1a1a3a;
-    border-radius: 3px;
-    overflow: hidden;
-  }
-
-  #current-dist .cd-fill {
-    height: 100%;
-    border-radius: 3px;
-    transition: width 0.15s;
-  }
-
-  /* Toggle switches */
-  .toggle-row {
+  .cd-row {
     display: flex;
     align-items: center;
     gap: 8px;
     font-size: 0.78rem;
-    color: #9999bb;
-    cursor: pointer;
   }
 
-  .toggle-row input[type=checkbox] {
-    accent-color: #6666cc;
-    width: 15px; height: 15px;
+  .cd-planet-name {
+    min-width: 58px;
+    font-weight: 500;
+    color: var(--text-dim);
   }
+
+  .cd-bar {
+    flex: 1;
+    height: 5px;
+    background: rgba(255,255,255,0.04);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+
+  .cd-fill {
+    height: 100%;
+    border-radius: 3px;
+    transition: width 0.12s ease-out;
+  }
+
+  .cd-value {
+    min-width: 52px;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+    font-weight: 600;
+    font-size: 0.74rem;
+    color: var(--text-dim);
+  }
+
+  /* Average distance table */
+  .avg-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  .avg-table th {
+    text-align: left;
+    padding: 8px 8px;
+    color: var(--text-muted);
+    font-weight: 600;
+    border-bottom: 1px solid var(--border);
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+  }
+
+  .avg-table td {
+    padding: 7px 8px;
+    font-size: 0.8rem;
+  }
+
+  .avg-table tr {
+    border-bottom: 1px solid rgba(255,255,255,0.03);
+    transition: background 0.15s;
+  }
+
+  .avg-table tr:hover { background: rgba(255,255,255,0.02); }
+
+  .avg-table tr.highlight {
+    background: var(--gold-bg);
+  }
+
+  .avg-table tr.highlight td { font-weight: 600; }
+
+  .planet-dot {
+    display: inline-block;
+    width: 9px; height: 9px;
+    border-radius: 50%;
+    margin-right: 7px;
+    vertical-align: middle;
+    box-shadow: 0 0 6px currentColor;
+  }
+
+  .bar-cell {
+    position: relative;
+    width: 115px;
+  }
+
+  .bar-bg {
+    position: absolute; left: 0; top: 50%; transform: translateY(-50%);
+    height: 16px; border-radius: 4px; opacity: 0.2;
+    transition: width 0.5s ease;
+  }
+
+  .bar-val {
+    position: relative;
+    z-index: 1;
+    font-variant-numeric: tabular-nums;
+    font-weight: 500;
+  }
+
+  .rank-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.65rem;
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+    font-weight: 700;
+  }
+
+  .rank-badge.gold {
+    background: linear-gradient(135deg, #8b7320, #d4a017);
+    border-color: #d4a017;
+    color: #fff;
+    box-shadow: 0 0 10px rgba(255, 214, 102, 0.3);
+  }
+
+  /* Info box */
+  .info-box {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 16px;
+    font-size: 0.75rem;
+    line-height: 1.65;
+    color: var(--text-dim);
+  }
+
+  .info-box strong { color: var(--text); }
+
+  .info-box .key-insight {
+    display: block;
+    margin-top: 10px;
+    padding: 8px 12px;
+    background: var(--accent-glow);
+    border-left: 3px solid var(--accent);
+    border-radius: 0 6px 6px 0;
+    color: var(--text);
+    font-weight: 500;
+  }
+
+  /* Footer */
+  .panel-footer {
+    padding: 14px 20px;
+    text-align: center;
+    font-size: 0.65rem;
+    color: var(--text-muted);
+    letter-spacing: 0.3px;
+    border-top: 1px solid var(--border);
+    margin-top: auto;
+  }
+
+  .panel-footer a {
+    color: var(--accent);
+    text-decoration: none;
+  }
+
+  .panel-footer a:hover { text-decoration: underline; }
+
+  /* ── Animations ── */
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .panel-section { animation: fadeIn 0.4s ease both; }
+  .panel-section:nth-child(2) { animation-delay: 0.05s; }
+  .panel-section:nth-child(3) { animation-delay: 0.1s; }
+  .panel-section:nth-child(4) { animation-delay: 0.15s; }
+  .panel-section:nth-child(5) { animation-delay: 0.2s; }
+  .panel-section:nth-child(6) { animation-delay: 0.25s; }
+  .panel-section:nth-child(7) { animation-delay: 0.3s; }
 </style>
 </head>
 <body>
 
+<!-- ── Simulation Canvas ── -->
 <div id="sim-panel">
   <canvas id="canvas"></canvas>
+
+  <div id="canvas-badge">
+    <div class="badge-row">
+      <span class="badge-pill">Day <span class="val" id="badge-day">0</span></span>
+      <span class="badge-pill">Year <span class="val" id="badge-year">0.0</span></span>
+    </div>
+  </div>
+
+  <div id="closest-now">
+    <div style="font-size:0.68rem;text-transform:uppercase;letter-spacing:1px;font-weight:600">Closest Right Now</div>
+    <div class="closest-planet" id="closest-now-name">—</div>
+  </div>
+
+  <div id="copyright-overlay">© Saiansh Tapuriah</div>
 </div>
 
+<!-- ── Data Panel ── -->
 <div id="data-panel">
-  <h1>Why Is Mercury the Closest Planet to Earth?</h1>
-  <p class="subtitle">
-    Surprisingly, Mercury is the nearest planet <em>on average</em> to every
-    other planet — because it never strays far from the Sun, while distant
-    planets spend long stretches on the far side of their orbits.
-  </p>
 
-  <hr>
+  <div class="panel-header">
+    <h1>Mercury Is the <span class="accent">Closest</span> Planet</h1>
+    <p class="tagline">
+      Counter-intuitively, Mercury is the nearest planet <em>on average</em> to
+      every other planet in the solar system — because it hugs the Sun and never
+      strays far, while other planets spend long stretches on the opposite side of
+      their orbits.
+    </p>
+  </div>
 
   <!-- Controls -->
-  <div class="section-hdr">Controls</div>
+  <div class="panel-section">
+    <div class="section-title"><span class="icon">⚙</span> Controls</div>
+    <div class="ctrl-group">
+      <div class="ctrl-row">
+        <label>Reference</label>
+        <select id="ref-planet">
+          <option value="2">🌍 Earth</option>
+          <option value="0">☿ Mercury</option>
+          <option value="1">♀ Venus</option>
+          <option value="3">♂ Mars</option>
+          <option value="4">♃ Jupiter</option>
+          <option value="5">♄ Saturn</option>
+        </select>
+      </div>
 
-  <div class="ctrl-row">
-    <label>Reference:</label>
-    <select id="ref-planet">
-      <option value="2">Earth</option>
-      <option value="0">Mercury</option>
-      <option value="1">Venus</option>
-      <option value="3">Mars</option>
-      <option value="4">Jupiter</option>
-      <option value="5">Saturn</option>
-    </select>
-  </div>
+      <div class="ctrl-row">
+        <label>Zoom</label>
+        <input type="range" id="zoom-slider" min="5" max="80" value="45">
+        <span class="slider-val" id="zoom-label">45%</span>
+      </div>
 
-  <div class="ctrl-row">
-    <label>Zoom:</label>
-    <input type="range" id="zoom-slider" min="5" max="80" value="45">
-    <span id="zoom-label" style="font-size:0.75rem;color:#8888aa;min-width:35px">45%</span>
-  </div>
+      <div class="ctrl-row">
+        <label>Speed</label>
+        <input type="range" id="speed-slider" min="1" max="200" value="1">
+        <span class="slider-val" id="speed-label">1×</span>
+      </div>
 
-  <div class="ctrl-row">
-    <label>Speed:</label>
-    <input type="range" id="speed-slider" min="1" max="200" value="1">
-    <span id="speed-label" style="font-size:0.75rem;color:#8888aa;min-width:35px">1×</span>
-  </div>
+      <div class="btn-group">
+        <button id="btn-pause">⏸ Pause</button>
+        <button id="btn-reset">↺ Reset</button>
+      </div>
 
-  <div class="ctrl-row">
-    <button id="btn-pause">⏸ Pause</button>
-    <button id="btn-reset">↺ Reset</button>
+      <div class="toggle-group">
+        <label class="toggle-label">
+          <input type="checkbox" id="chk-lines" checked> Distance lines
+        </label>
+        <label class="toggle-label">
+          <input type="checkbox" id="chk-orbits" checked> Orbits
+        </label>
+        <label class="toggle-label">
+          <input type="checkbox" id="chk-trails"> Trails
+        </label>
+      </div>
+    </div>
   </div>
-
-  <div class="ctrl-row">
-    <label class="toggle-row">
-      <input type="checkbox" id="chk-lines" checked> Show distance lines
-    </label>
-  </div>
-  <div class="ctrl-row">
-    <label class="toggle-row">
-      <input type="checkbox" id="chk-orbits" checked> Show orbits
-    </label>
-  </div>
-  <div class="ctrl-row">
-    <label class="toggle-row">
-      <input type="checkbox" id="chk-trails"> Show trails
-    </label>
-  </div>
-
-  <hr>
 
   <!-- Stats -->
-  <div class="stats-grid">
-    <div class="stat-card">
-      <div class="stat-val" id="stat-orbits">0</div>
-      <div class="stat-label">Earth Orbits</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-val" id="stat-samples">0</div>
-      <div class="stat-label">Samples</div>
+  <div class="panel-section">
+    <div class="section-title"><span class="icon">📊</span> Simulation Progress</div>
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-val" id="stat-orbits">0</div>
+        <div class="stat-label">Earth Years</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-val" id="stat-samples">0</div>
+        <div class="stat-label">Samples</div>
+      </div>
     </div>
   </div>
 
-  <hr>
-
   <!-- Current distances -->
-  <div class="section-hdr">Current Distance from <span id="cur-ref-name">Earth</span></div>
-  <div id="current-dist"></div>
-
-  <hr>
+  <div class="panel-section">
+    <div class="section-title"><span class="icon">📏</span> Current Distance from <span id="cur-ref-name" style="color:var(--text)">Earth</span></div>
+    <div id="current-dist"></div>
+  </div>
 
   <!-- Average distance table -->
-  <div class="section-hdr">Average Distance from <span id="avg-ref-name">Earth</span></div>
-  <table class="avg-table">
-    <thead>
-      <tr>
-        <th>Rank</th>
-        <th>Planet</th>
-        <th>Avg Dist (AU)</th>
-      </tr>
-    </thead>
-    <tbody id="avg-tbody"></tbody>
-  </table>
-
-  <hr>
+  <div class="panel-section">
+    <div class="section-title"><span class="icon">🏆</span> Average Distance from <span id="avg-ref-name" style="color:var(--text)">Earth</span></div>
+    <table class="avg-table">
+      <thead>
+        <tr>
+          <th style="width:38px">Rank</th>
+          <th>Planet</th>
+          <th>Avg Dist (AU)</th>
+        </tr>
+      </thead>
+      <tbody id="avg-tbody"></tbody>
+    </table>
+  </div>
 
   <!-- Explanation -->
-  <div class="info-box">
-    <strong>How it works:</strong> Each planet orbits the Sun at a fixed radius
-    (simplified as circles). The simulation samples the distance between the
-    reference planet and every other planet at each time-step, building a
-    running average. Because Mercury's orbit is tiny (0.39 AU), it stays near
-    the Sun — and therefore near every planet — most of the time. Larger-orbit
-    planets like Venus or Mars swing far away when on the opposite side of the Sun,
-    inflating their averages despite being <em>sometimes</em> closer.
+  <div class="panel-section">
+    <div class="section-title"><span class="icon">💡</span> How It Works</div>
+    <div class="info-box">
+      <strong>The simulation</strong> models each planet orbiting the Sun at its
+      real relative speed (simplified as circular orbits). At every time-step, the
+      distance between the reference planet and every other planet is measured and
+      added to a running average.
+
+      <span class="key-insight">
+        💡 Mercury's orbit is just 0.39 AU — so it's always near the Sun, and
+        therefore always <em>reasonably</em> close to every planet. Venus or Mars
+        may get closer at times, but they also swing to the far side of the Sun,
+        driving up their averages.
+      </span>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <div class="panel-footer">
+    © 2025 Saiansh Tapuriah · Built with curiosity about orbital mechanics
   </div>
 </div>
 
 <script>
-// ─── Planet Data ─────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════
+//  PLANET DATA
+// ═══════════════════════════════════════════════════════════════
 const PLANETS = [
-  { name: 'Mercury', au: 0.387, period: 87.97,  color: '#b0b0b0', r: 4  },
-  { name: 'Venus',   au: 0.723, period: 224.7,  color: '#e6c87a', r: 6  },
-  { name: 'Earth',   au: 1.000, period: 365.25, color: '#4a9eff', r: 6  },
-  { name: 'Mars',    au: 1.524, period: 687.0,  color: '#e07040', r: 5  },
-  { name: 'Jupiter', au: 5.203, period: 4332.6, color: '#d4a56a', r: 10 },
-  { name: 'Saturn',  au: 9.537, period: 10759,  color: '#e8d590', r: 9  },
+  { name: 'Mercury', au: 0.387, period: 87.97,  color: '#a8a8b8', r: 4.5, glow: '#8888aa' },
+  { name: 'Venus',   au: 0.723, period: 224.7,  color: '#e8c870', r: 6,   glow: '#d4a830' },
+  { name: 'Earth',   au: 1.000, period: 365.25, color: '#4a9eff', r: 6.5, glow: '#2070d0' },
+  { name: 'Mars',    au: 1.524, period: 687.0,  color: '#e07040', r: 5,   glow: '#c04020' },
+  { name: 'Jupiter', au: 5.203, period: 4332.6, color: '#d4a56a', r: 11,  glow: '#b08040' },
+  { name: 'Saturn',  au: 9.537, period: 10759,  color: '#e8d590', r: 9.5, glow: '#c0a860' },
 ];
 
-// ─── State ───────────────────────────────────────────────────
-let refIdx = 2; // Earth
-let speed = 1; // days per frame
+// ═══════════════════════════════════════════════════════════════
+//  STATE
+// ═══════════════════════════════════════════════════════════════
+let refIdx = 2;
+let speed = 1;
 let paused = false;
 let showLines = true;
 let showOrbits = true;
 let showTrails = false;
 let simDay = 0;
 let sampleCount = 0;
-
-// Running averages (sumDist / sampleCount)
-let sumDist = []; // sumDist[i] = total accumulated distance from ref planet to planet i
-let angles = [];  // current angle (radians) for each planet
-let trails = [];  // array of arrays of {x, y}
-
-const MAX_TRAIL = 600;
+let sumDist = [];
+let angles = [];
+let trails = [];
+const MAX_TRAIL = 800;
+let time = 0; // for star twinkling
 
 function resetSim() {
   simDay = 0;
   sampleCount = 0;
   sumDist = PLANETS.map(() => 0);
-  angles = PLANETS.map(() => Math.random() * Math.PI * 2); // random start
+  angles = PLANETS.map(() => Math.random() * Math.PI * 2);
   trails = PLANETS.map(() => []);
 }
 resetSim();
 
-// ─── Canvas Setup ────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════
+//  CANVAS
+// ═══════════════════════════════════════════════════════════════
 const canvas = document.getElementById('canvas');
 const ctx = canvas.getContext('2d');
 let W, H, cx, cy, scale;
@@ -426,15 +715,16 @@ function resize() {
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   cx = W / 2;
   cy = H / 2;
-  scale = Math.min(W, H) * zoom / 1000; // zoom-driven scale
+  scale = Math.min(W, H) * zoom / 1000;
 }
 window.addEventListener('resize', resize);
 resize();
 
-// ─── Helpers ─────────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════
+//  HELPERS
+// ═══════════════════════════════════════════════════════════════
 function planetPos(i) {
-  const a = angles[i];
-  const r = PLANETS[i].au;
+  const a = angles[i], r = PLANETS[i].au;
   return { x: cx + Math.cos(a) * r * scale, y: cy + Math.sin(a) * r * scale };
 }
 
@@ -446,25 +736,57 @@ function dist(i, j) {
   return Math.sqrt(dx * dx + dy * dy);
 }
 
-// ─── Update ──────────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════
+//  STARFIELD (twinkling)
+// ═══════════════════════════════════════════════════════════════
+let stars = null;
+function initStars() {
+  stars = [];
+  for (let i = 0; i < 350; i++) {
+    stars.push({
+      x: Math.random(), y: Math.random(),
+      r: Math.random() * 1.3 + 0.2,
+      baseAlpha: Math.random() * 0.5 + 0.08,
+      twinkleSpeed: Math.random() * 2 + 0.5,
+      twinkleOffset: Math.random() * Math.PI * 2,
+      hue: Math.random() > 0.85 ? (Math.random() > 0.5 ? 220 : 30) : 0,
+    });
+  }
+}
+
+function drawStars() {
+  if (!stars) initStars();
+  for (const s of stars) {
+    const twinkle = Math.sin(time * s.twinkleSpeed + s.twinkleOffset) * 0.15;
+    const alpha = Math.max(0.03, s.baseAlpha + twinkle);
+    ctx.beginPath();
+    ctx.arc(s.x * W, s.y * H, s.r, 0, Math.PI * 2);
+    if (s.hue) {
+      ctx.fillStyle = `hsla(${s.hue}, 60%, 80%, ${alpha})`;
+    } else {
+      ctx.fillStyle = `rgba(255,255,255,${alpha})`;
+    }
+    ctx.fill();
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  UPDATE
+// ═══════════════════════════════════════════════════════════════
 function update() {
   if (paused) return;
 
-  // Advance angles
   for (let i = 0; i < PLANETS.length; i++) {
-    const angularSpeed = (2 * Math.PI) / PLANETS[i].period; // rad/day
-    angles[i] += angularSpeed * speed;
+    angles[i] += (2 * Math.PI / PLANETS[i].period) * speed;
   }
   simDay += speed;
 
-  // Sample distances
   sampleCount++;
   for (let i = 0; i < PLANETS.length; i++) {
     if (i === refIdx) continue;
     sumDist[i] += dist(refIdx, i);
   }
 
-  // Trails
   if (showTrails) {
     for (let i = 0; i < PLANETS.length; i++) {
       const p = planetPos(i);
@@ -474,21 +796,35 @@ function update() {
   }
 }
 
-// ─── Draw ────────────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════
+//  DRAW
+// ═══════════════════════════════════════════════════════════════
 function draw() {
   ctx.clearRect(0, 0, W, H);
+  time += 0.016;
 
-  // Starfield (static seed)
+  // Stars
   drawStars();
+
+  // Subtle nebula glow in center
+  const nebula = ctx.createRadialGradient(cx, cy, 0, cx, cy, Math.min(W, H) * 0.5);
+  nebula.addColorStop(0, 'rgba(60, 50, 100, 0.04)');
+  nebula.addColorStop(0.5, 'rgba(30, 30, 80, 0.02)');
+  nebula.addColorStop(1, 'transparent');
+  ctx.fillStyle = nebula;
+  ctx.fillRect(0, 0, W, H);
 
   // Orbits
   if (showOrbits) {
-    for (const p of PLANETS) {
+    for (let i = 0; i < PLANETS.length; i++) {
+      const p = PLANETS[i];
       ctx.beginPath();
       ctx.arc(cx, cy, p.au * scale, 0, Math.PI * 2);
-      ctx.strokeStyle = 'rgba(255,255,255,0.07)';
-      ctx.lineWidth = 1;
+      ctx.strokeStyle = i === refIdx ? 'rgba(108,123,255,0.12)' : 'rgba(255,255,255,0.05)';
+      ctx.lineWidth = i === refIdx ? 1.5 : 1;
+      ctx.setLineDash(i === refIdx ? [] : [2, 6]);
       ctx.stroke();
+      ctx.setLineDash([]);
     }
   }
 
@@ -497,130 +833,215 @@ function draw() {
     for (let i = 0; i < PLANETS.length; i++) {
       const t = trails[i];
       if (t.length < 2) continue;
-      ctx.beginPath();
-      ctx.moveTo(t[0].x, t[0].y);
       for (let j = 1; j < t.length; j++) {
+        const alpha = (j / t.length) * 0.5;
+        ctx.beginPath();
+        ctx.moveTo(t[j - 1].x, t[j - 1].y);
         ctx.lineTo(t[j].x, t[j].y);
+        ctx.strokeStyle = PLANETS[i].color + Math.round(alpha * 255).toString(16).padStart(2, '0');
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
       }
-      ctx.strokeStyle = PLANETS[i].color + '44';
-      ctx.lineWidth = 1.5;
-      ctx.stroke();
     }
   }
 
-  // Distance lines
+  // Distance lines (gradient)
   if (showLines) {
     const refPos = planetPos(refIdx);
     for (let i = 0; i < PLANETS.length; i++) {
       if (i === refIdx) continue;
       const p = planetPos(i);
+      const grad = ctx.createLinearGradient(refPos.x, refPos.y, p.x, p.y);
+      grad.addColorStop(0, PLANETS[refIdx].color + '60');
+      grad.addColorStop(1, PLANETS[i].color + '60');
       ctx.beginPath();
       ctx.moveTo(refPos.x, refPos.y);
       ctx.lineTo(p.x, p.y);
-      ctx.strokeStyle = PLANETS[i].color + '55';
+      ctx.strokeStyle = grad;
       ctx.lineWidth = 1;
-      ctx.setLineDash([4, 4]);
+      ctx.setLineDash([3, 5]);
       ctx.stroke();
       ctx.setLineDash([]);
 
-      // Distance label at midpoint
+      // Distance label
       const mx = (refPos.x + p.x) / 2;
       const my = (refPos.y + p.y) / 2;
       const d = dist(refIdx, i);
-      ctx.font = '10px "Segoe UI", system-ui, sans-serif';
+      const labelText = d.toFixed(2) + ' AU';
+      ctx.font = '500 10px "Inter", system-ui, sans-serif';
+      const tw = ctx.measureText(labelText).width;
+      // Label background
+      ctx.fillStyle = 'rgba(6,6,19,0.75)';
+      ctx.beginPath();
+      ctx.roundRect(mx - tw / 2 - 5, my - 14, tw + 10, 16, 4);
+      ctx.fill();
       ctx.fillStyle = '#888';
       ctx.textAlign = 'center';
-      ctx.fillText(d.toFixed(2) + ' AU', mx, my - 5);
+      ctx.textBaseline = 'middle';
+      ctx.fillText(labelText, mx, my - 6);
     }
   }
 
-  // Sun
-  const sunGrad = ctx.createRadialGradient(cx, cy, 0, cx, cy, 16);
-  sunGrad.addColorStop(0, '#fff8e0');
-  sunGrad.addColorStop(0.4, '#ffcc00');
-  sunGrad.addColorStop(1, '#ff8800');
+  // ── Sun ──
+  // Outer glow
+  const outerGlow = ctx.createRadialGradient(cx, cy, 5, cx, cy, 65);
+  outerGlow.addColorStop(0, 'rgba(255,200,50,0.12)');
+  outerGlow.addColorStop(0.5, 'rgba(255,150,30,0.04)');
+  outerGlow.addColorStop(1, 'transparent');
   ctx.beginPath();
-  ctx.arc(cx, cy, 12, 0, Math.PI * 2);
+  ctx.arc(cx, cy, 65, 0, Math.PI * 2);
+  ctx.fillStyle = outerGlow;
+  ctx.fill();
+
+  // Corona rays
+  const rayCount = 12;
+  for (let i = 0; i < rayCount; i++) {
+    const angle = (i / rayCount) * Math.PI * 2 + time * 0.1;
+    const len = 28 + Math.sin(time * 1.5 + i * 0.8) * 8;
+    ctx.beginPath();
+    ctx.moveTo(cx + Math.cos(angle) * 13, cy + Math.sin(angle) * 13);
+    ctx.lineTo(cx + Math.cos(angle) * len, cy + Math.sin(angle) * len);
+    ctx.strokeStyle = `rgba(255, 200, 80, ${0.04 + Math.sin(time + i) * 0.02})`;
+    ctx.lineWidth = 2;
+    ctx.stroke();
+  }
+
+  // Sun body
+  const sunGrad = ctx.createRadialGradient(cx - 2, cy - 2, 0, cx, cy, 14);
+  sunGrad.addColorStop(0, '#fffbe6');
+  sunGrad.addColorStop(0.3, '#ffe066');
+  sunGrad.addColorStop(0.7, '#ffaa00');
+  sunGrad.addColorStop(1, '#e07000');
+  ctx.beginPath();
+  ctx.arc(cx, cy, 13, 0, Math.PI * 2);
   ctx.fillStyle = sunGrad;
   ctx.fill();
 
-  // Glow
-  const glowGrad = ctx.createRadialGradient(cx, cy, 10, cx, cy, 50);
-  glowGrad.addColorStop(0, 'rgba(255,200,50,0.15)');
-  glowGrad.addColorStop(1, 'rgba(255,200,50,0)');
+  // Sun inner highlight
   ctx.beginPath();
-  ctx.arc(cx, cy, 50, 0, Math.PI * 2);
-  ctx.fillStyle = glowGrad;
+  ctx.arc(cx - 3, cy - 3, 5, 0, Math.PI * 2);
+  ctx.fillStyle = 'rgba(255,255,240,0.25)';
   ctx.fill();
 
-  // Planets
+  // ── Planets ──
   for (let i = 0; i < PLANETS.length; i++) {
-    const p = planetPos(i);
+    const pos = planetPos(i);
     const pl = PLANETS[i];
     const isRef = i === refIdx;
 
-    // Glow for ref planet
+    // Outer glow
+    const glowSize = pl.r + (isRef ? 18 : 10);
+    const g = ctx.createRadialGradient(pos.x, pos.y, pl.r * 0.5, pos.x, pos.y, glowSize);
+    g.addColorStop(0, pl.glow + (isRef ? '40' : '20'));
+    g.addColorStop(1, pl.glow + '00');
+    ctx.beginPath();
+    ctx.arc(pos.x, pos.y, glowSize, 0, Math.PI * 2);
+    ctx.fillStyle = g;
+    ctx.fill();
+
+    // Reference indicator ring
     if (isRef) {
-      const g = ctx.createRadialGradient(p.x, p.y, pl.r, p.x, p.y, pl.r + 12);
-      g.addColorStop(0, pl.color + '66');
-      g.addColorStop(1, pl.color + '00');
       ctx.beginPath();
-      ctx.arc(p.x, p.y, pl.r + 12, 0, Math.PI * 2);
-      ctx.fillStyle = g;
-      ctx.fill();
+      ctx.arc(pos.x, pos.y, pl.r + 5, 0, Math.PI * 2);
+      ctx.strokeStyle = 'rgba(108, 123, 255, 0.4)';
+      ctx.lineWidth = 1.5;
+      ctx.setLineDash([3, 3]);
+      ctx.stroke();
+      ctx.setLineDash([]);
     }
 
+    // Planet body with gradient
+    const bodyGrad = ctx.createRadialGradient(
+      pos.x - pl.r * 0.3, pos.y - pl.r * 0.3, 0,
+      pos.x, pos.y, pl.r
+    );
+    bodyGrad.addColorStop(0, lightenColor(pl.color, 40));
+    bodyGrad.addColorStop(0.7, pl.color);
+    bodyGrad.addColorStop(1, darkenColor(pl.color, 40));
     ctx.beginPath();
-    ctx.arc(p.x, p.y, pl.r, 0, Math.PI * 2);
-    ctx.fillStyle = pl.color;
+    ctx.arc(pos.x, pos.y, pl.r, 0, Math.PI * 2);
+    ctx.fillStyle = bodyGrad;
+    ctx.fill();
+
+    // Saturn's rings
+    if (pl.name === 'Saturn') {
+      ctx.save();
+      ctx.translate(pos.x, pos.y);
+      ctx.scale(1, 0.35);
+      ctx.beginPath();
+      ctx.arc(0, 0, pl.r + 6, 0, Math.PI * 2);
+      ctx.strokeStyle = '#e8d590aa';
+      ctx.lineWidth = 2.5;
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.arc(0, 0, pl.r + 9, 0, Math.PI * 2);
+      ctx.strokeStyle = '#e8d59066';
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    // Specular highlight
+    ctx.beginPath();
+    ctx.arc(pos.x - pl.r * 0.25, pos.y - pl.r * 0.25, pl.r * 0.35, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(255,255,255,0.18)';
     ctx.fill();
 
     // Label
-    ctx.font = (isRef ? 'bold ' : '') + '11px "Segoe UI", system-ui, sans-serif';
-    ctx.fillStyle = isRef ? '#fff' : '#aaa';
+    ctx.font = (isRef ? '600 ' : '400 ') + '11px "Inter", system-ui, sans-serif';
+    ctx.fillStyle = isRef ? '#fff' : 'rgba(255,255,255,0.55)';
     ctx.textAlign = 'center';
-    ctx.fillText(pl.name, p.x, p.y - pl.r - 6);
-  }
-
-  // Title overlay
-  ctx.font = 'bold 13px "Segoe UI", system-ui, sans-serif';
-  ctx.fillStyle = '#555';
-  ctx.textAlign = 'left';
-  ctx.fillText('Day ' + Math.floor(simDay).toLocaleString(), 14, 24);
-}
-
-// Simple star field
-let stars = null;
-function drawStars() {
-  if (!stars) {
-    stars = [];
-    for (let i = 0; i < 200; i++) {
-      stars.push({
-        x: Math.random(),
-        y: Math.random(),
-        r: Math.random() * 1.2 + 0.3,
-        a: Math.random() * 0.4 + 0.1
-      });
-    }
-  }
-  for (const s of stars) {
-    ctx.beginPath();
-    ctx.arc(s.x * W, s.y * H, s.r, 0, Math.PI * 2);
-    ctx.fillStyle = `rgba(255,255,255,${s.a})`;
-    ctx.fill();
+    ctx.textBaseline = 'bottom';
+    const labelY = pl.name === 'Saturn' ? pos.y - pl.r - 10 : pos.y - pl.r - 7;
+    ctx.fillText(pl.name, pos.x, labelY);
   }
 }
 
-// ─── UI Update ───────────────────────────────────────────────
+// Color helpers
+function lightenColor(hex, amt) {
+  const num = parseInt(hex.slice(1), 16);
+  const r = Math.min(255, (num >> 16) + amt);
+  const g = Math.min(255, ((num >> 8) & 0xff) + amt);
+  const b = Math.min(255, (num & 0xff) + amt);
+  return `rgb(${r},${g},${b})`;
+}
+
+function darkenColor(hex, amt) {
+  const num = parseInt(hex.slice(1), 16);
+  const r = Math.max(0, (num >> 16) - amt);
+  const g = Math.max(0, ((num >> 8) & 0xff) - amt);
+  const b = Math.max(0, (num & 0xff) - amt);
+  return `rgb(${r},${g},${b})`;
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  UI UPDATE
+// ═══════════════════════════════════════════════════════════════
 function updateUI() {
   const refName = PLANETS[refIdx].name;
   document.getElementById('cur-ref-name').textContent = refName;
   document.getElementById('avg-ref-name').textContent = refName;
 
+  // Badge
+  document.getElementById('badge-day').textContent = Math.floor(simDay).toLocaleString();
+  document.getElementById('badge-year').textContent = (simDay / 365.25).toFixed(1);
+
   // Stats
-  const earthOrbits = simDay / 365.25;
-  document.getElementById('stat-orbits').textContent = earthOrbits.toFixed(1);
+  document.getElementById('stat-orbits').textContent = (simDay / 365.25).toFixed(1);
   document.getElementById('stat-samples').textContent = sampleCount.toLocaleString();
+
+  // Find closest planet right now
+  let closestDist = Infinity, closestIdx = -1;
+  for (let i = 0; i < PLANETS.length; i++) {
+    if (i === refIdx) continue;
+    const d = dist(refIdx, i);
+    if (d < closestDist) { closestDist = d; closestIdx = i; }
+  }
+  const closestEl = document.getElementById('closest-now-name');
+  if (closestIdx >= 0) {
+    closestEl.textContent = PLANETS[closestIdx].name + ' (' + closestDist.toFixed(2) + ' AU)';
+    closestEl.style.color = PLANETS[closestIdx].color;
+  }
 
   // Current distances
   const curDiv = document.getElementById('current-dist');
@@ -630,22 +1051,22 @@ function updateUI() {
     if (i === refIdx) continue;
     const d = dist(refIdx, i);
     const pct = Math.min(d / maxAU * 100, 100);
+    const isClosest = i === closestIdx;
     curHTML += `<div class="cd-row">
-      <span class="planet-dot" style="background:${PLANETS[i].color}"></span>
-      <span style="min-width:60px">${PLANETS[i].name}</span>
+      <span class="planet-dot" style="background:${PLANETS[i].color};color:${PLANETS[i].color}"></span>
+      <span class="cd-planet-name" ${isClosest ? 'style="color:var(--text);font-weight:600"' : ''}>${PLANETS[i].name}</span>
       <div class="cd-bar"><div class="cd-fill" style="width:${pct}%;background:${PLANETS[i].color}"></div></div>
-      <span style="min-width:55px;text-align:right;font-variant-numeric:tabular-nums">${d.toFixed(2)} AU</span>
+      <span class="cd-value" ${isClosest ? 'style="color:var(--gold)"' : ''}>${d.toFixed(2)} AU</span>
     </div>`;
   }
   curDiv.innerHTML = curHTML;
 
-  // Average distances sorted
+  // Average distances
   const tbody = document.getElementById('avg-tbody');
   const avgs = [];
   for (let i = 0; i < PLANETS.length; i++) {
     if (i === refIdx) continue;
-    const avg = sampleCount > 0 ? sumDist[i] / sampleCount : 0;
-    avgs.push({ idx: i, avg });
+    avgs.push({ idx: i, avg: sampleCount > 0 ? sumDist[i] / sampleCount : 0 });
   }
   avgs.sort((a, b) => a.avg - b.avg);
   const maxAvg = avgs.length ? avgs[avgs.length - 1].avg : 1;
@@ -657,7 +1078,7 @@ function updateUI() {
     const barW = maxAvg > 0 ? (item.avg / maxAvg) * 100 : 0;
     html += `<tr class="${isMercury ? 'highlight' : ''}">
       <td><span class="rank-badge ${rank === 0 ? 'gold' : ''}">${rank + 1}</span></td>
-      <td><span class="planet-dot" style="background:${p.color}"></span>${p.name}</td>
+      <td><span class="planet-dot" style="background:${p.color};color:${p.color}"></span>${p.name}</td>
       <td class="bar-cell">
         <div class="bar-bg" style="width:${barW}%;background:${p.color}"></div>
         <span class="bar-val">${item.avg.toFixed(3)}</span>
@@ -667,7 +1088,9 @@ function updateUI() {
   tbody.innerHTML = html;
 }
 
-// ─── Controls ────────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════
+//  CONTROLS
+// ═══════════════════════════════════════════════════════════════
 document.getElementById('ref-planet').addEventListener('change', function() {
   refIdx = parseInt(this.value);
   resetSim();
@@ -690,9 +1113,7 @@ document.getElementById('btn-pause').addEventListener('click', function() {
   this.classList.toggle('active', paused);
 });
 
-document.getElementById('btn-reset').addEventListener('click', function() {
-  resetSim();
-});
+document.getElementById('btn-reset').addEventListener('click', resetSim);
 
 document.getElementById('chk-lines').addEventListener('change', function() {
   showLines = this.checked;
@@ -707,13 +1128,15 @@ document.getElementById('chk-trails').addEventListener('change', function() {
   if (!showTrails) trails = PLANETS.map(() => []);
 });
 
-// ─── Main Loop ───────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════
+//  MAIN LOOP
+// ═══════════════════════════════════════════════════════════════
 let frameCount = 0;
 function loop() {
   update();
   draw();
   frameCount++;
-  if (frameCount % 5 === 0) updateUI(); // throttle DOM updates
+  if (frameCount % 5 === 0) updateUI();
   requestAnimationFrame(loop);
 }
 loop();
