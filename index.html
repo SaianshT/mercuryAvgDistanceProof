@@ -551,24 +551,24 @@
 
   <!-- Controls -->
   <div class="panel-section">
-    <div class="section-title"><span class="icon">⚙</span> Controls</div>
+    <div class="section-title">Controls</div>
     <div class="ctrl-group">
       <div class="ctrl-row">
         <label>Reference</label>
         <select id="ref-planet">
-          <option value="2">🌍 Earth</option>
-          <option value="0">☿ Mercury</option>
-          <option value="1">♀ Venus</option>
-          <option value="3">♂ Mars</option>
-          <option value="4">♃ Jupiter</option>
-          <option value="5">♄ Saturn</option>
+          <option value="2">Earth</option>
+          <option value="0">Mercury</option>
+          <option value="1">Venus</option>
+          <option value="3">Mars</option>
+          <option value="4">Jupiter</option>
+          <option value="5">Saturn</option>
         </select>
       </div>
 
       <div class="ctrl-row">
         <label>Zoom</label>
-        <input type="range" id="zoom-slider" min="5" max="80" value="45">
-        <span class="slider-val" id="zoom-label">45%</span>
+        <input type="range" id="zoom-slider" min="5" max="80" value="70">
+        <span class="slider-val" id="zoom-label">70%</span>
       </div>
 
       <div class="ctrl-row">
@@ -598,7 +598,7 @@
 
   <!-- Stats -->
   <div class="panel-section">
-    <div class="section-title"><span class="icon">📊</span> Simulation Progress</div>
+    <div class="section-title">Simulation Progress</div>
     <div class="stats-grid">
       <div class="stat-card">
         <div class="stat-val" id="stat-orbits">0</div>
@@ -613,13 +613,13 @@
 
   <!-- Current distances -->
   <div class="panel-section">
-    <div class="section-title"><span class="icon">📏</span> Current Distance from <span id="cur-ref-name" style="color:var(--text)">Earth</span></div>
+    <div class="section-title">Current Distance from <span id="cur-ref-name" style="color:var(--text)">Earth</span></div>
     <div id="current-dist"></div>
   </div>
 
   <!-- Average distance table -->
   <div class="panel-section">
-    <div class="section-title"><span class="icon">🏆</span> Average Distance from <span id="avg-ref-name" style="color:var(--text)">Earth</span></div>
+    <div class="section-title">Average Distance from <span id="avg-ref-name" style="color:var(--text)">Earth</span></div>
     <table class="avg-table">
       <thead>
         <tr>
@@ -634,7 +634,7 @@
 
   <!-- Explanation -->
   <div class="panel-section">
-    <div class="section-title"><span class="icon">💡</span> How It Works</div>
+    <div class="section-title">How It Works</div>
     <div class="info-box">
       <strong>The simulation</strong> models each planet orbiting the Sun at its
       real relative speed (simplified as circular orbits). At every time-step, the
@@ -642,7 +642,7 @@
       added to a running average.
 
       <span class="key-insight">
-        💡 Mercury's orbit is just 0.39 AU — so it's always near the Sun, and
+        Mercury's orbit is just 0.39 AU — so it's always near the Sun, and
         therefore always <em>reasonably</em> close to every planet. Venus or Mars
         may get closer at times, but they also swing to the far side of the Sun,
         driving up their averages.
@@ -701,7 +701,7 @@ resetSim();
 const canvas = document.getElementById('canvas');
 const ctx = canvas.getContext('2d');
 let W, H, cx, cy, scale;
-let zoom = 45;
+let zoom = 70;
 
 function resize() {
   const panel = document.getElementById('sim-panel');
@@ -820,9 +820,9 @@ function draw() {
       const p = PLANETS[i];
       ctx.beginPath();
       ctx.arc(cx, cy, p.au * scale, 0, Math.PI * 2);
-      ctx.strokeStyle = i === refIdx ? 'rgba(108,123,255,0.12)' : 'rgba(255,255,255,0.05)';
+      ctx.strokeStyle = i === refIdx ? 'rgba(108,123,255,0.25)' : 'rgba(255,255,255,0.12)';
       ctx.lineWidth = i === refIdx ? 1.5 : 1;
-      ctx.setLineDash(i === refIdx ? [] : [2, 6]);
+      ctx.setLineDash(i === refIdx ? [] : [4, 4]);
       ctx.stroke();
       ctx.setLineDash([]);
     }
