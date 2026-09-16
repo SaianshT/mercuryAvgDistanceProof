@@ -820,9 +820,9 @@ function draw() {
       const p = PLANETS[i];
       ctx.beginPath();
       ctx.arc(cx, cy, p.au * scale, 0, Math.PI * 2);
-      ctx.strokeStyle = i === refIdx ? 'rgba(108,123,255,0.25)' : 'rgba(255,255,255,0.12)';
+      ctx.strokeStyle = i === refIdx ? 'rgba(108,123,255,0.45)' : 'rgba(255,255,255,0.25)';
       ctx.lineWidth = i === refIdx ? 1.5 : 1;
-      ctx.setLineDash(i === refIdx ? [] : [4, 4]);
+      ctx.setLineDash([]);
       ctx.stroke();
       ctx.setLineDash([]);
     }
