@@ -1,0 +1,722 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Why Mercury Is the Closest Planet (On Average)</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: #0a0a1a;
+    color: #e0e0e0;
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    overflow: hidden;
+    height: 100vh;
+    display: flex;
+  }
+
+  /* ── Left panel: simulation ── */
+  #sim-panel {
+    flex: 1;
+    position: relative;
+    min-width: 0;
+  }
+
+  canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+
+  /* ── Right panel: data ── */
+  #data-panel {
+    width: 370px;
+    background: #111125;
+    border-left: 1px solid #2a2a4a;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    padding: 18px 16px;
+    gap: 14px;
+  }
+
+  h1 {
+    font-size: 1.15rem;
+    color: #aab4ff;
+    line-height: 1.35;
+  }
+
+  .subtitle {
+    font-size: 0.82rem;
+    color: #8888aa;
+    line-height: 1.5;
+  }
+
+  /* Controls */
+  .ctrl-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .ctrl-row label {
+    font-size: 0.78rem;
+    color: #9999bb;
+    min-width: 80px;
+  }
+
+  button {
+    background: #22224a;
+    border: 1px solid #3a3a6a;
+    color: #c0c0e0;
+    padding: 5px 14px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.8rem;
+    transition: background 0.15s;
+  }
+  button:hover { background: #33336a; }
+  button.active { background: #4444aa; border-color: #6666cc; color: #fff; }
+
+  select, input[type=range] {
+    background: #1a1a3a;
+    border: 1px solid #3a3a6a;
+    color: #c0c0e0;
+    padding: 4px 8px;
+    border-radius: 5px;
+    font-size: 0.8rem;
+  }
+
+  input[type=range] {
+    flex: 1;
+    accent-color: #6666cc;
+    min-width: 100px;
+  }
+
+  /* Average-distance table */
+  .avg-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.82rem;
+  }
+
+  .avg-table th {
+    text-align: left;
+    padding: 6px 8px;
+    color: #8888bb;
+    font-weight: 600;
+    border-bottom: 1px solid #2a2a4a;
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .avg-table td {
+    padding: 5px 8px;
+    border-bottom: 1px solid #1a1a3a;
+  }
+
+  .avg-table tr.highlight td {
+    background: rgba(80, 80, 200, 0.15);
+    font-weight: 600;
+  }
+
+  .avg-table .planet-dot {
+    display: inline-block;
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    margin-right: 6px;
+    vertical-align: middle;
+  }
+
+  .avg-table .bar-cell {
+    position: relative;
+    width: 110px;
+  }
+
+  .avg-table .bar-bg {
+    position: absolute; left: 0; top: 50%; transform: translateY(-50%);
+    height: 14px; border-radius: 3px; opacity: 0.35;
+    transition: width 0.4s ease;
+  }
+
+  .avg-table .bar-val {
+    position: relative;
+    z-index: 1;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .rank-badge {
+    display: inline-block;
+    font-size: 0.68rem;
+    padding: 1px 6px;
+    border-radius: 10px;
+    background: #2a2a5a;
+    color: #aab;
+    font-weight: 600;
+    min-width: 20px;
+    text-align: center;
+  }
+
+  .rank-badge.gold { background: #8b7320; color: #ffe680; }
+
+  /* Info box */
+  .info-box {
+    background: #161630;
+    border: 1px solid #2a2a4a;
+    border-radius: 8px;
+    padding: 12px 14px;
+    font-size: 0.78rem;
+    line-height: 1.55;
+    color: #9999bb;
+  }
+  .info-box strong { color: #c0c0f0; }
+
+  /* Stats row */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  .stat-card {
+    background: #161630;
+    border: 1px solid #2a2a4a;
+    border-radius: 8px;
+    padding: 10px 12px;
+    text-align: center;
+  }
+
+  .stat-card .stat-val {
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: #aab4ff;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .stat-card .stat-label {
+    font-size: 0.68rem;
+    color: #7777aa;
+    margin-top: 2px;
+  }
+
+  hr {
+    border: none;
+    border-top: 1px solid #222244;
+  }
+
+  /* Section headers */
+  .section-hdr {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: #6666aa;
+    font-weight: 700;
+  }
+
+  /* Current distances */
+  #current-dist {
+    font-size: 0.78rem;
+    line-height: 1.7;
+  }
+
+  #current-dist .cd-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  #current-dist .cd-bar {
+    flex: 1;
+    height: 6px;
+    background: #1a1a3a;
+    border-radius: 3px;
+    overflow: hidden;
+  }
+
+  #current-dist .cd-fill {
+    height: 100%;
+    border-radius: 3px;
+    transition: width 0.15s;
+  }
+
+  /* Toggle switches */
+  .toggle-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.78rem;
+    color: #9999bb;
+    cursor: pointer;
+  }
+
+  .toggle-row input[type=checkbox] {
+    accent-color: #6666cc;
+    width: 15px; height: 15px;
+  }
+</style>
+</head>
+<body>
+
+<div id="sim-panel">
+  <canvas id="canvas"></canvas>
+</div>
+
+<div id="data-panel">
+  <h1>Why Is Mercury the Closest Planet to Earth?</h1>
+  <p class="subtitle">
+    Surprisingly, Mercury is the nearest planet <em>on average</em> to every
+    other planet — because it never strays far from the Sun, while distant
+    planets spend long stretches on the far side of their orbits.
+  </p>
+
+  <hr>
+
+  <!-- Controls -->
+  <div class="section-hdr">Controls</div>
+
+  <div class="ctrl-row">
+    <label>Reference:</label>
+    <select id="ref-planet">
+      <option value="2">Earth</option>
+      <option value="0">Mercury</option>
+      <option value="1">Venus</option>
+      <option value="3">Mars</option>
+      <option value="4">Jupiter</option>
+      <option value="5">Saturn</option>
+    </select>
+  </div>
+
+  <div class="ctrl-row">
+    <label>Zoom:</label>
+    <input type="range" id="zoom-slider" min="5" max="80" value="45">
+    <span id="zoom-label" style="font-size:0.75rem;color:#8888aa;min-width:35px">45%</span>
+  </div>
+
+  <div class="ctrl-row">
+    <label>Speed:</label>
+    <input type="range" id="speed-slider" min="1" max="200" value="1">
+    <span id="speed-label" style="font-size:0.75rem;color:#8888aa;min-width:35px">1×</span>
+  </div>
+
+  <div class="ctrl-row">
+    <button id="btn-pause">⏸ Pause</button>
+    <button id="btn-reset">↺ Reset</button>
+  </div>
+
+  <div class="ctrl-row">
+    <label class="toggle-row">
+      <input type="checkbox" id="chk-lines" checked> Show distance lines
+    </label>
+  </div>
+  <div class="ctrl-row">
+    <label class="toggle-row">
+      <input type="checkbox" id="chk-orbits" checked> Show orbits
+    </label>
+  </div>
+  <div class="ctrl-row">
+    <label class="toggle-row">
+      <input type="checkbox" id="chk-trails"> Show trails
+    </label>
+  </div>
+
+  <hr>
+
+  <!-- Stats -->
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-val" id="stat-orbits">0</div>
+      <div class="stat-label">Earth Orbits</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-val" id="stat-samples">0</div>
+      <div class="stat-label">Samples</div>
+    </div>
+  </div>
+
+  <hr>
+
+  <!-- Current distances -->
+  <div class="section-hdr">Current Distance from <span id="cur-ref-name">Earth</span></div>
+  <div id="current-dist"></div>
+
+  <hr>
+
+  <!-- Average distance table -->
+  <div class="section-hdr">Average Distance from <span id="avg-ref-name">Earth</span></div>
+  <table class="avg-table">
+    <thead>
+      <tr>
+        <th>Rank</th>
+        <th>Planet</th>
+        <th>Avg Dist (AU)</th>
+      </tr>
+    </thead>
+    <tbody id="avg-tbody"></tbody>
+  </table>
+
+  <hr>
+
+  <!-- Explanation -->
+  <div class="info-box">
+    <strong>How it works:</strong> Each planet orbits the Sun at a fixed radius
+    (simplified as circles). The simulation samples the distance between the
+    reference planet and every other planet at each time-step, building a
+    running average. Because Mercury's orbit is tiny (0.39 AU), it stays near
+    the Sun — and therefore near every planet — most of the time. Larger-orbit
+    planets like Venus or Mars swing far away when on the opposite side of the Sun,
+    inflating their averages despite being <em>sometimes</em> closer.
+  </div>
+</div>
+
+<script>
+// ─── Planet Data ─────────────────────────────────────────────
+const PLANETS = [
+  { name: 'Mercury', au: 0.387, period: 87.97,  color: '#b0b0b0', r: 4  },
+  { name: 'Venus',   au: 0.723, period: 224.7,  color: '#e6c87a', r: 6  },
+  { name: 'Earth',   au: 1.000, period: 365.25, color: '#4a9eff', r: 6  },
+  { name: 'Mars',    au: 1.524, period: 687.0,  color: '#e07040', r: 5  },
+  { name: 'Jupiter', au: 5.203, period: 4332.6, color: '#d4a56a', r: 10 },
+  { name: 'Saturn',  au: 9.537, period: 10759,  color: '#e8d590', r: 9  },
+];
+
+// ─── State ───────────────────────────────────────────────────
+let refIdx = 2; // Earth
+let speed = 1; // days per frame
+let paused = false;
+let showLines = true;
+let showOrbits = true;
+let showTrails = false;
+let simDay = 0;
+let sampleCount = 0;
+
+// Running averages (sumDist / sampleCount)
+let sumDist = []; // sumDist[i] = total accumulated distance from ref planet to planet i
+let angles = [];  // current angle (radians) for each planet
+let trails = [];  // array of arrays of {x, y}
+
+const MAX_TRAIL = 600;
+
+function resetSim() {
+  simDay = 0;
+  sampleCount = 0;
+  sumDist = PLANETS.map(() => 0);
+  angles = PLANETS.map(() => Math.random() * Math.PI * 2); // random start
+  trails = PLANETS.map(() => []);
+}
+resetSim();
+
+// ─── Canvas Setup ────────────────────────────────────────────
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+let W, H, cx, cy, scale;
+let zoom = 45;
+
+function resize() {
+  const panel = document.getElementById('sim-panel');
+  const dpr = window.devicePixelRatio || 1;
+  W = panel.clientWidth;
+  H = panel.clientHeight;
+  canvas.width = W * dpr;
+  canvas.height = H * dpr;
+  canvas.style.width = W + 'px';
+  canvas.style.height = H + 'px';
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  cx = W / 2;
+  cy = H / 2;
+  scale = Math.min(W, H) * zoom / 1000; // zoom-driven scale
+}
+window.addEventListener('resize', resize);
+resize();
+
+// ─── Helpers ─────────────────────────────────────────────────
+function planetPos(i) {
+  const a = angles[i];
+  const r = PLANETS[i].au;
+  return { x: cx + Math.cos(a) * r * scale, y: cy + Math.sin(a) * r * scale };
+}
+
+function dist(i, j) {
+  const ai = angles[i], aj = angles[j];
+  const ri = PLANETS[i].au, rj = PLANETS[j].au;
+  const dx = Math.cos(ai) * ri - Math.cos(aj) * rj;
+  const dy = Math.sin(ai) * ri - Math.sin(aj) * rj;
+  return Math.sqrt(dx * dx + dy * dy);
+}
+
+// ─── Update ──────────────────────────────────────────────────
+function update() {
+  if (paused) return;
+
+  // Advance angles
+  for (let i = 0; i < PLANETS.length; i++) {
+    const angularSpeed = (2 * Math.PI) / PLANETS[i].period; // rad/day
+    angles[i] += angularSpeed * speed;
+  }
+  simDay += speed;
+
+  // Sample distances
+  sampleCount++;
+  for (let i = 0; i < PLANETS.length; i++) {
+    if (i === refIdx) continue;
+    sumDist[i] += dist(refIdx, i);
+  }
+
+  // Trails
+  if (showTrails) {
+    for (let i = 0; i < PLANETS.length; i++) {
+      const p = planetPos(i);
+      trails[i].push({ x: p.x, y: p.y });
+      if (trails[i].length > MAX_TRAIL) trails[i].shift();
+    }
+  }
+}
+
+// ─── Draw ────────────────────────────────────────────────────
+function draw() {
+  ctx.clearRect(0, 0, W, H);
+
+  // Starfield (static seed)
+  drawStars();
+
+  // Orbits
+  if (showOrbits) {
+    for (const p of PLANETS) {
+      ctx.beginPath();
+      ctx.arc(cx, cy, p.au * scale, 0, Math.PI * 2);
+      ctx.strokeStyle = 'rgba(255,255,255,0.07)';
+      ctx.lineWidth = 1;
+      ctx.stroke();
+    }
+  }
+
+  // Trails
+  if (showTrails) {
+    for (let i = 0; i < PLANETS.length; i++) {
+      const t = trails[i];
+      if (t.length < 2) continue;
+      ctx.beginPath();
+      ctx.moveTo(t[0].x, t[0].y);
+      for (let j = 1; j < t.length; j++) {
+        ctx.lineTo(t[j].x, t[j].y);
+      }
+      ctx.strokeStyle = PLANETS[i].color + '44';
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+    }
+  }
+
+  // Distance lines
+  if (showLines) {
+    const refPos = planetPos(refIdx);
+    for (let i = 0; i < PLANETS.length; i++) {
+      if (i === refIdx) continue;
+      const p = planetPos(i);
+      ctx.beginPath();
+      ctx.moveTo(refPos.x, refPos.y);
+      ctx.lineTo(p.x, p.y);
+      ctx.strokeStyle = PLANETS[i].color + '55';
+      ctx.lineWidth = 1;
+      ctx.setLineDash([4, 4]);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      // Distance label at midpoint
+      const mx = (refPos.x + p.x) / 2;
+      const my = (refPos.y + p.y) / 2;
+      const d = dist(refIdx, i);
+      ctx.font = '10px "Segoe UI", system-ui, sans-serif';
+      ctx.fillStyle = '#888';
+      ctx.textAlign = 'center';
+      ctx.fillText(d.toFixed(2) + ' AU', mx, my - 5);
+    }
+  }
+
+  // Sun
+  const sunGrad = ctx.createRadialGradient(cx, cy, 0, cx, cy, 16);
+  sunGrad.addColorStop(0, '#fff8e0');
+  sunGrad.addColorStop(0.4, '#ffcc00');
+  sunGrad.addColorStop(1, '#ff8800');
+  ctx.beginPath();
+  ctx.arc(cx, cy, 12, 0, Math.PI * 2);
+  ctx.fillStyle = sunGrad;
+  ctx.fill();
+
+  // Glow
+  const glowGrad = ctx.createRadialGradient(cx, cy, 10, cx, cy, 50);
+  glowGrad.addColorStop(0, 'rgba(255,200,50,0.15)');
+  glowGrad.addColorStop(1, 'rgba(255,200,50,0)');
+  ctx.beginPath();
+  ctx.arc(cx, cy, 50, 0, Math.PI * 2);
+  ctx.fillStyle = glowGrad;
+  ctx.fill();
+
+  // Planets
+  for (let i = 0; i < PLANETS.length; i++) {
+    const p = planetPos(i);
+    const pl = PLANETS[i];
+    const isRef = i === refIdx;
+
+    // Glow for ref planet
+    if (isRef) {
+      const g = ctx.createRadialGradient(p.x, p.y, pl.r, p.x, p.y, pl.r + 12);
+      g.addColorStop(0, pl.color + '66');
+      g.addColorStop(1, pl.color + '00');
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, pl.r + 12, 0, Math.PI * 2);
+      ctx.fillStyle = g;
+      ctx.fill();
+    }
+
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, pl.r, 0, Math.PI * 2);
+    ctx.fillStyle = pl.color;
+    ctx.fill();
+
+    // Label
+    ctx.font = (isRef ? 'bold ' : '') + '11px "Segoe UI", system-ui, sans-serif';
+    ctx.fillStyle = isRef ? '#fff' : '#aaa';
+    ctx.textAlign = 'center';
+    ctx.fillText(pl.name, p.x, p.y - pl.r - 6);
+  }
+
+  // Title overlay
+  ctx.font = 'bold 13px "Segoe UI", system-ui, sans-serif';
+  ctx.fillStyle = '#555';
+  ctx.textAlign = 'left';
+  ctx.fillText('Day ' + Math.floor(simDay).toLocaleString(), 14, 24);
+}
+
+// Simple star field
+let stars = null;
+function drawStars() {
+  if (!stars) {
+    stars = [];
+    for (let i = 0; i < 200; i++) {
+      stars.push({
+        x: Math.random(),
+        y: Math.random(),
+        r: Math.random() * 1.2 + 0.3,
+        a: Math.random() * 0.4 + 0.1
+      });
+    }
+  }
+  for (const s of stars) {
+    ctx.beginPath();
+    ctx.arc(s.x * W, s.y * H, s.r, 0, Math.PI * 2);
+    ctx.fillStyle = `rgba(255,255,255,${s.a})`;
+    ctx.fill();
+  }
+}
+
+// ─── UI Update ───────────────────────────────────────────────
+function updateUI() {
+  const refName = PLANETS[refIdx].name;
+  document.getElementById('cur-ref-name').textContent = refName;
+  document.getElementById('avg-ref-name').textContent = refName;
+
+  // Stats
+  const earthOrbits = simDay / 365.25;
+  document.getElementById('stat-orbits').textContent = earthOrbits.toFixed(1);
+  document.getElementById('stat-samples').textContent = sampleCount.toLocaleString();
+
+  // Current distances
+  const curDiv = document.getElementById('current-dist');
+  let curHTML = '';
+  const maxAU = PLANETS[PLANETS.length - 1].au * 2;
+  for (let i = 0; i < PLANETS.length; i++) {
+    if (i === refIdx) continue;
+    const d = dist(refIdx, i);
+    const pct = Math.min(d / maxAU * 100, 100);
+    curHTML += `<div class="cd-row">
+      <span class="planet-dot" style="background:${PLANETS[i].color}"></span>
+      <span style="min-width:60px">${PLANETS[i].name}</span>
+      <div class="cd-bar"><div class="cd-fill" style="width:${pct}%;background:${PLANETS[i].color}"></div></div>
+      <span style="min-width:55px;text-align:right;font-variant-numeric:tabular-nums">${d.toFixed(2)} AU</span>
+    </div>`;
+  }
+  curDiv.innerHTML = curHTML;
+
+  // Average distances sorted
+  const tbody = document.getElementById('avg-tbody');
+  const avgs = [];
+  for (let i = 0; i < PLANETS.length; i++) {
+    if (i === refIdx) continue;
+    const avg = sampleCount > 0 ? sumDist[i] / sampleCount : 0;
+    avgs.push({ idx: i, avg });
+  }
+  avgs.sort((a, b) => a.avg - b.avg);
+  const maxAvg = avgs.length ? avgs[avgs.length - 1].avg : 1;
+
+  let html = '';
+  avgs.forEach((item, rank) => {
+    const p = PLANETS[item.idx];
+    const isMercury = p.name === 'Mercury';
+    const barW = maxAvg > 0 ? (item.avg / maxAvg) * 100 : 0;
+    html += `<tr class="${isMercury ? 'highlight' : ''}">
+      <td><span class="rank-badge ${rank === 0 ? 'gold' : ''}">${rank + 1}</span></td>
+      <td><span class="planet-dot" style="background:${p.color}"></span>${p.name}</td>
+      <td class="bar-cell">
+        <div class="bar-bg" style="width:${barW}%;background:${p.color}"></div>
+        <span class="bar-val">${item.avg.toFixed(3)}</span>
+      </td>
+    </tr>`;
+  });
+  tbody.innerHTML = html;
+}
+
+// ─── Controls ────────────────────────────────────────────────
+document.getElementById('ref-planet').addEventListener('change', function() {
+  refIdx = parseInt(this.value);
+  resetSim();
+});
+
+document.getElementById('zoom-slider').addEventListener('input', function() {
+  zoom = parseInt(this.value);
+  document.getElementById('zoom-label').textContent = zoom + '%';
+  resize();
+});
+
+document.getElementById('speed-slider').addEventListener('input', function() {
+  speed = parseInt(this.value);
+  document.getElementById('speed-label').textContent = speed + '×';
+});
+
+document.getElementById('btn-pause').addEventListener('click', function() {
+  paused = !paused;
+  this.textContent = paused ? '▶ Play' : '⏸ Pause';
+  this.classList.toggle('active', paused);
+});
+
+document.getElementById('btn-reset').addEventListener('click', function() {
+  resetSim();
+});
+
+document.getElementById('chk-lines').addEventListener('change', function() {
+  showLines = this.checked;
+});
+
+document.getElementById('chk-orbits').addEventListener('change', function() {
+  showOrbits = this.checked;
+});
+
+document.getElementById('chk-trails').addEventListener('change', function() {
+  showTrails = this.checked;
+  if (!showTrails) trails = PLANETS.map(() => []);
+});
+
+// ─── Main Loop ───────────────────────────────────────────────
+let frameCount = 0;
+function loop() {
+  update();
+  draw();
+  frameCount++;
+  if (frameCount % 5 === 0) updateUI(); // throttle DOM updates
+  requestAnimationFrame(loop);
+}
+loop();
+</script>
+</body>
+</html>
